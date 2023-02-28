@@ -56,7 +56,7 @@ count = phm_df.count()
 print("Count of rows: ", count)
 
 phm_df = phm_df.repartition(5, 'individual')
-phm_df.write.mode('overwrite').parquet("output/")
+phm_df.write.mode('overwrite').parquet("../output/")
 
 
 # get the end time
