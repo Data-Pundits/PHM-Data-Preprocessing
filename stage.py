@@ -14,6 +14,7 @@ extract_values = F.udf(lambda row: list(map(float, row[1:])), T.ArrayType(T.Floa
 def data_consolidator(base_path, file_type, individuals):
     df_final = None
     partition=Window.orderBy(F.monotonically_increasing_id())
+
     for index in individuals:
         path = base_path + file_type
         file_path = path + "_" + 'pdmp' + str(index) + ".csv"
@@ -94,7 +95,7 @@ df_rdd = df_final.rdd
 print(df_rdd.getNumPartitions())
 
 df_final.show()
-df_final.write.mode('overwrite').parquet("output/")
+df_final.write.mode('overwrite').parquet("stage/")
 
 # get the end time
 et = time.time()
