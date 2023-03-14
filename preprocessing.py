@@ -86,7 +86,6 @@ st = time.time()
 partition=Window.orderBy(F.monotonically_increasing_id())
 
 df_final = df_final.withColumn('index', F.row_number().over(partition))
-df_final.printSchema()
 
 df_rdd = df_final.rdd
 print(df_rdd.getNumPartitions())
@@ -94,7 +93,6 @@ df_final = df_final.repartition(5, 'individual')
 df_rdd = df_final.rdd
 print(df_rdd.getNumPartitions())
 
-df_final.show()
 df_final.write.mode('overwrite').parquet("stage/")
 
 # get the end time
