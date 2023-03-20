@@ -17,8 +17,13 @@ variance_for_window = F.udf(lambda row, from_index, to_index: float(np.var(row[f
 skew_for_window = F.udf(lambda row, from_index, to_index: float(skew(row[from_index:to_index])), T.FloatType())
 kurtosis_for_window = F.udf(lambda row, from_index, to_index: float(kurtosis(row[from_index:to_index])), T.FloatType())
 
+#Two-Way T Test
 twt_test = F.udf(lambda row, mean: float(ttest_1samp(row, mean).statistic), T.FloatType())
+
+# Kruskal Wallis  U Test
 kwu_test = F.udf(lambda sensor1, sensor2: float(ttest_ind(sensor1, sensor2).statistic), T.FloatType())
+
+# Kruskal Wallis H Test
 kwh_test = F.udf(lambda sensor1, sensor2, sensor3: float(kruskal(sensor1, sensor2, sensor3).statistic), T.FloatType())
 
 
@@ -61,6 +66,7 @@ spark = SparkSession \
     .builder \
     .appName("Data Stager") \
     .config("spark.driver.memory", '8g') \
+    .config("spark.jars", "postgresql_jars/postgresql-42.2.18.jar") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel('ERROR')
@@ -78,14 +84,16 @@ phm_df = calculate_metrics(phm_df, 'po')
 
 phm_df = calculate_kruskal_test_metrics(phm_df)
 
+#Writing to Parquet files:
 phm_df = phm_df.withColumn('fault_class', phm_df['fault_class'].cast(T.IntegerType()))
 
-phm_df.select('pdmp_twtt', 'pin_twtt', 'po_twtt', 'pdmp_pin_kwut', 'pdmp_po_kwut', 'pin_po_kwut', 'pdmp_pin_po_kwht').show()
-phm_df.printSchema()
-
-
+#Writing to DB:
 phm_df = phm_df.repartition(5, 'individual')
 phm_df.write.mode('overwrite').parquet("../feature_extracts/")
+phm_df.write.format('jdbc').option("url", "jdbc:postgresql://localhost:5432/postgres") \
+    .option("driver", "org.postgresql.Driver").option("dbtable", "features_extracted") \
+    .option("user", "postgres").option("password", "postgres").save()
+
 
 
 # get the end time
