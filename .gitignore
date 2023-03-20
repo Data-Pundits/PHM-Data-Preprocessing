@@ -130,4 +130,4 @@ dmypy.json
 
 # dataset files:
 stage/
-output/
+.DS_Store
