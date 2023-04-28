@@ -1,3 +1,11 @@
+"""
+## INFO:
+## This script generates engineered features (simple and advanced statistical measures) from the raw dataset.
+
+## It requires the 'trimmer.py' to be run prior to this and some data should be present in the 'output/' folder.
+## This is the last job in the data-engineering pipeline.
+"""
+
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 import pyspark.sql.types as T
@@ -74,7 +82,7 @@ spark.sparkContext.setLogLevel('ERROR')
 # get the start time
 st = time.time()
 
-phm_df = spark.read.parquet("../output/")
+phm_df = spark.read.parquet("consolidated_trimmed_stage/")
 
 array_size = phm_df.select(F.size(F.col('pdmp'))).collect()[0][0]
 
@@ -89,7 +97,7 @@ phm_df = phm_df.withColumn('fault_class', phm_df['fault_class'].cast(T.IntegerTy
 
 #Writing to DB:
 phm_df = phm_df.repartition(5, 'individual')
-phm_df.write.mode('overwrite').parquet("../feature_extracts/")
+phm_df.write.mode('overwrite').parquet("feature_extracts/")
 phm_df.write.format('jdbc').option("url", "jdbc:postgresql://localhost:5432/postgres") \
     .option("driver", "org.postgresql.Driver").option("dbtable", "features_extracted") \
     .option("user", "postgres").option("password", "postgres").save()
