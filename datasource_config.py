@@ -1,0 +1,1 @@
+TRAINING_DATA_PATH = "training_data/"
